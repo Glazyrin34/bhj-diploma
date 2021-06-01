@@ -1,15 +1,19 @@
+'use strict';
+
 /**
  * Класс User управляет авторизацией, выходом и
  * регистрацией пользователя из приложения
  * Имеет свойство URL, равное '/user'.
  * */
 class User {
+  static  URL = '/user';
+
   /**
    * Устанавливает текущего пользователя в
    * локальном хранилище.
    * */
   static setCurrent(user) {
-
+    localStorage.setItem('user', JSON.stringify(user));
   }
 
   /**
@@ -17,7 +21,7 @@ class User {
    * пользователе из локального хранилища.
    * */
   static unsetCurrent() {
-
+    localStorage.removeItem('user');
   }
 
   /**
@@ -25,7 +29,11 @@ class User {
    * из локального хранилища
    * */
   static current() {
-
+    try {
+      return JSON.parse(localStorage.getItem('user'));
+    } catch (e) {
+      callback(e);
+    }
   }
 
   /**
@@ -33,7 +41,19 @@ class User {
    * авторизованном пользователе.
    * */
   static fetch(callback) {
-
+    createRequest({
+      url: this.URL + '/current',
+      responseType: 'json',
+      method: 'GET',
+      callback: (_, response) => {
+        if (response?.user) {
+          User.setCurrent(response.user);
+        } else {
+          User.unsetCurrent();
+        }
+        callback();
+      }
+    });
   }
 
   /**
@@ -42,17 +62,19 @@ class User {
    * сохранить пользователя через метод
    * User.setCurrent.
    * */
-  static login( data, callback) {
+  static login(data, callback) {
     createRequest({
       url: this.URL + '/login',
-      method: 'POST',
+      data: data,
       responseType: 'json',
-      data,
-      callback: (err, response) => {
-        if (response && response.user) {
-          this.setCurrent(response.user);
+      method: 'POST',
+      callback: (error, response) => {
+        if (error) {
+          callback(error);
+        } else {
+          User.setCurrent(response.user);
+          callback();
         }
-        callback(err, response);
       }
     });
   }
@@ -63,15 +85,41 @@ class User {
    * сохранить пользователя через метод
    * User.setCurrent.
    * */
-  static register( data, callback) {
-
+  static register(data, callback) {
+    createRequest({
+      url: this.URL + '/register',
+      data: data,
+      responseType: 'json',
+      method: 'POST',
+      callback: (error, response) => {
+        if (error) {
+          callback(error);
+        } else {
+          User.setCurrent(response.user);
+          callback();
+        }
+      }
+    });
   }
 
   /**
    * Производит выход из приложения. После успешного
    * выхода необходимо вызвать метод User.unsetCurrent
    * */
-  static logout( data, callback) {
-
+  static logout(data, callback) {
+    createRequest({
+      url: this.URL + '/logout',
+      data: data,
+      responseType: 'json',
+      method: 'POST',
+      callback: (error) => {
+        if (error) {
+          callback(error);
+        } else {
+          User.unsetCurrent();
+          callback();
+        }
+      }
+    });
   }
 }
