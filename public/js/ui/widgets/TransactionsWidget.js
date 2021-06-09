@@ -13,15 +13,13 @@ class TransactionsWidget {
    * Если переданный элемент не существует,
    * необходимо выкинуть ошибку.
    * */
-  constructor(element) {
+  constructor( element ) {
     if (!element) {
-      throw new Error('element of class TransactionsWidget not found');
+      throw new Error (`Error empty ${element} in class TransactionsWidget`)
     }
     this.element = element;
-
     this.registerEvents();
   }
-
   /**
    * Регистрирует обработчики нажатия на
    * кнопки «Новый доход» и «Новый расход».
@@ -29,10 +27,13 @@ class TransactionsWidget {
    * экземпляра окна
    * */
   registerEvents() {
-    const income = this.element.querySelector('.btn-success');
-    const expense = this.element.querySelector('.btn-danger');
-
-    income.onclick = () => App.getModal('newIncome').open();
-    expense.onclick = () => App.getModal('newExpense').open();
+    this.element.querySelector( '.create-income-button' ).onclick = (e) => {
+      e.preventDefault();
+      App.getModal('newIncome').open();
+    }
+    this.element.querySelector( '.create-expense-button' ).onclick = (e) => {
+      e.preventDefault();
+      App.getModal('newExpense').open();
+    }
   }
 }

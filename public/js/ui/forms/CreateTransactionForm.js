@@ -10,12 +10,10 @@ class CreateTransactionForm extends AsyncForm {
    * метод renderAccountsList
    * */
   constructor(element) {
-    super(element);
     if (!element) {
-      throw new Error('Element of class CreateTransactionForm not found');
-    }
-    this.element = element;
-
+      throw new Error (`Error empty ${element} in class CreateTransactionForm`)
+    } 
+    super(element);
     this.renderAccountsList();
   }
 
@@ -24,26 +22,13 @@ class CreateTransactionForm extends AsyncForm {
    * Обновляет в форме всплывающего окна выпадающий список
    * */
   renderAccountsList() {
-    const user = User.current();
-
-    const callback = (error, response) => {
-      if (error) {
-        handleError(error);
-      } else {
-        const selectBox = this.element.querySelector('.accounts-select');
-        selectBox.textContent = '';
-        let html = '';
-        for (const account of response.data) {
-          html += `
-            <option value="${account.id}">${account.name}</option>
-          `;
-        }
-
-        selectBox.insertAdjacentHTML('beforeend', html);
-      }
-    }
-
-    Account.list(user, callback);
+    Account.list({}, (err, response) => {
+      if (err === null && response.success) {
+        let items = '';
+        Array.from(response.data).forEach(item => {items+= `<option value="${item.id}">${item.name}</option>`});
+        this.element.querySelector('.accounts-select').innerHTML = items;
+      } 
+    })
   }
 
   /**
@@ -53,22 +38,12 @@ class CreateTransactionForm extends AsyncForm {
    * в котором находится форма
    * */
   onSubmit(data) {
-    const callback = (error) => {
-      if (error) {
-        handleError(error);
-      } else {
+    Transaction.create(data, (err, response) => {
+      if (err === null && response.success) {
         this.element.reset();
-        if (App.getModal('newIncome')) {
-          App.getModal('newIncome').close();
-        }
-        if (App.getModal('newExpense')) {
-          App.getModal('newExpense').close();
-        }
-        App.getWidget("accounts").update();
-        App.getPage("transactions").update();
+        App.getModal('newIncome').close();
+        App.update();
       }
-    }
-
-    Transaction.create(data, callback);
+    })
   }
 }
